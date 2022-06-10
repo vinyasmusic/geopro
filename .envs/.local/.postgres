@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=geopro
+POSTGRES_USER=AMUNTxcVkAdpyqzgySRyiMADGPHxibsQ
+POSTGRES_PASSWORD=PWZkarllcH4B5Rx01cKkObRZztxhXGtDSWZkjAnzAQOdKmumhmaIYElOTHzsjAEK
