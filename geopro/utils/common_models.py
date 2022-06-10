@@ -1,6 +1,7 @@
-from django.db import models
 import uuid
-from model_utils.models import TimeStampedModel, SoftDeletableModel
+
+from django.db import models
+from model_utils.models import SoftDeletableModel, TimeStampedModel
 
 
 class GeoProBaseModel(TimeStampedModel, SoftDeletableModel):
