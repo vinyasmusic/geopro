@@ -322,7 +322,7 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     "SERVERS": [
-        {"url": "http://127.0.0.1:8000", "description": "Local Development server"},
+        {"url": "http://localhost:8000", "description": "Local Development server"},
         {"url": "https://spatialgeo.xyz", "description": "Production server"},
     ],
 }
