@@ -11,11 +11,7 @@ from django.urls import reverse
 from geopro.users.forms import UserAdminChangeForm
 from geopro.users.models import User
 from geopro.users.tests.factories import UserFactory
-from geopro.users.views import (
-    UserRedirectView,
-    UserUpdateView,
-    user_detail_view,
-)
+from geopro.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 
