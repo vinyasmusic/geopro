@@ -169,3 +169,23 @@ def test_create_new_country_200(user: User, rf: APIRequestFactory):
     force_authenticate(request, user)
     response = view(request)
     assert response.status_code == 201
+
+
+def test_delete_country_not_found(user: User, rf: APIRequestFactory):
+    request = rf.delete(
+        "/api/country/",
+    )
+    view = CountryGeoViewSet.as_view({"delete": "destroy"})
+    force_authenticate(request, user)
+    response = view(request, iso_code__iexact="ARW")
+    assert response.status_code == 404
+
+
+def test_delete_country(singapore, user: User, rf: APIRequestFactory):
+    request = rf.delete(
+        "/api/country/",
+    )
+    view = CountryGeoViewSet.as_view({"delete": "destroy"})
+    force_authenticate(request, user)
+    response = view(request, iso_code__iexact="SGP")
+    assert response.status_code == 204
