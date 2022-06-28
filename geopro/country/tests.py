@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from django.contrib.gis.geos import GEOSGeometry
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from geopro.country.models import CountryGeo
@@ -8,6 +9,33 @@ from geopro.country.views import CountryGeoViewSet
 from geopro.users.models import User
 
 pytestmark = pytest.mark.django_db
+
+SAN_MARINO = {
+    "type": "Polygon",
+    "coordinates": [
+        [
+            [12.4294503590001, 43.89205551500001],
+            [12.399581381000075, 43.903217625000138],
+            [12.385628745000105, 43.924534153000138],
+            [12.395653973000037, 43.948408664000027],
+            [12.411048669000138, 43.959661012000055],
+            [12.421388836000119, 43.967218885000136],
+            [12.453324871000092, 43.979052789000065],
+            [12.482160321000038, 43.982566786000092],
+            [12.489188315000121, 43.973109999000144],
+            [12.492392254000094, 43.95641851100001],
+            [12.490325196000128, 43.939158583000108],
+            [12.48309447400004, 43.929204898000052],
+            [12.482160321000038, 43.927918959000067],
+            [12.479576499000132, 43.925800225000074],
+            [12.478026206000095, 43.923216404000073],
+            [12.477493853000112, 43.920050984000085],
+            [12.478286774000082, 43.917037885000099],
+            [12.460456219000037, 43.895259454000097],
+            [12.4294503590001, 43.89205551500001],
+        ]
+    ],
+}
 
 
 @pytest.fixture
@@ -134,34 +162,7 @@ def test_create_new_country_403(rf: APIRequestFactory):
 
 
 def test_create_new_country_200(user: User, rf: APIRequestFactory):
-    data = json.dumps(
-        {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [12.4294503590001, 43.89205551500001],
-                    [12.399581381000075, 43.903217625000138],
-                    [12.385628745000105, 43.924534153000138],
-                    [12.395653973000037, 43.948408664000027],
-                    [12.411048669000138, 43.959661012000055],
-                    [12.421388836000119, 43.967218885000136],
-                    [12.453324871000092, 43.979052789000065],
-                    [12.482160321000038, 43.982566786000092],
-                    [12.489188315000121, 43.973109999000144],
-                    [12.492392254000094, 43.95641851100001],
-                    [12.490325196000128, 43.939158583000108],
-                    [12.48309447400004, 43.929204898000052],
-                    [12.482160321000038, 43.927918959000067],
-                    [12.479576499000132, 43.925800225000074],
-                    [12.478026206000095, 43.923216404000073],
-                    [12.477493853000112, 43.920050984000085],
-                    [12.478286774000082, 43.917037885000099],
-                    [12.460456219000037, 43.895259454000097],
-                    [12.4294503590001, 43.89205551500001],
-                ]
-            ],
-        }
-    )
+    data = json.dumps(SAN_MARINO)
     request = rf.post(
         "/api/country/", {"name": "San Marino", "iso_code": "SMR", "data": data}
     )
@@ -189,3 +190,24 @@ def test_delete_country(singapore, user: User, rf: APIRequestFactory):
     force_authenticate(request, user)
     response = view(request, iso_code__iexact="SGP")
     assert response.status_code == 204
+
+
+def test_search_by_geometry(
+    singapore: CountryGeo, aruba: CountryGeo, user: User, rf: APIRequestFactory
+):
+    # Searching with San Marino data should not return any result
+    data = GEOSGeometry(json.dumps(SAN_MARINO))
+    request = rf.get(f"/api/country?polygon={data}")
+    force_authenticate(request, user)
+    view = CountryGeoViewSet.as_view({"get": "list"})
+    response = view(request)
+    assert response.status_code == 200
+    assert len(response.data["features"]) == 0
+
+    # Searching with singapore data should return result
+    data = GEOSGeometry(singapore.data)
+    request = rf.get(f"/api/country?polygon={data}")
+    force_authenticate(request, user)
+    response = view(request)
+    assert response.status_code == 200
+    assert len(response.data["features"]) == 1
