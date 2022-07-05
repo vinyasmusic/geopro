@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis import geos
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from geopro.country.models import CountryGeo
@@ -89,6 +89,7 @@ def singapore(db) -> CountryGeo:
             ],
         }
     )
+    data = geos.MultiPolygon(geos.GEOSGeometry(data))
     return CountryGeo.objects.create(name="Singapore", iso_code="SGP", data=data)
 
 
@@ -129,6 +130,7 @@ def aruba(db) -> CountryGeo:
             ],
         }
     )
+    data = geos.MultiPolygon(geos.GEOSGeometry(data))
     return CountryGeo.objects.create(name="Aruba", iso_code="ARW", data=data)
 
 
@@ -138,7 +140,7 @@ def test_get_country_by_name_200(singapore, user: User, rf: APIRequestFactory):
     view = CountryGeoViewSet.as_view({"get": "list"})
     response = view(request)
     assert response.status_code == 200
-    assert response.data["features"][0]["properties"]["iso_code"] == "SGP"
+    assert response.data["results"]["features"][0]["properties"]["iso_code"] == "SGP"
 
 
 def test_get_country_by_name_empty(singapore, user: User, rf: APIRequestFactory):
@@ -147,7 +149,7 @@ def test_get_country_by_name_empty(singapore, user: User, rf: APIRequestFactory)
     view = CountryGeoViewSet.as_view({"get": "list"})
     response = view(request)
     assert response.status_code == 200
-    assert len(response.data["features"]) == 0
+    assert len(response.data["results"]["features"]) == 0
 
 
 def test_create_new_country_403(rf: APIRequestFactory):
@@ -196,18 +198,18 @@ def test_search_by_geometry(
     singapore: CountryGeo, aruba: CountryGeo, user: User, rf: APIRequestFactory
 ):
     # Searching with San Marino data should not return any result
-    data = GEOSGeometry(json.dumps(SAN_MARINO))
-    request = rf.get(f"/api/country?polygon={data}")
+    data = geos.GEOSGeometry(json.dumps(SAN_MARINO))
+    request = rf.get(f"/api/country?geom={data}")
     force_authenticate(request, user)
     view = CountryGeoViewSet.as_view({"get": "list"})
     response = view(request)
     assert response.status_code == 200
-    assert len(response.data["features"]) == 0
+    assert len(response.data["results"]["features"]) == 0
 
     # Searching with singapore data should return result
-    data = GEOSGeometry(singapore.data)
-    request = rf.get(f"/api/country?polygon={data}")
+    data = geos.GEOSGeometry(singapore.data)
+    request = rf.get(f"/api/country?geom={data}")
     force_authenticate(request, user)
     response = view(request)
     assert response.status_code == 200
-    assert len(response.data["features"]) == 1
+    assert len(response.data["results"]["features"]) == 1

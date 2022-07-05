@@ -7,7 +7,7 @@ class CountryGeo(GeoProBaseModel):
 
     iso_code = models.CharField(max_length=4, unique=True)
     name = models.CharField(max_length=200)
-    data = models.PolygonField()
+    data = models.MultiPolygonField()
 
     def __str__(self):
         return f"{self.name} {self.iso_code}"
